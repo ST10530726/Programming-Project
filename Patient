@@ -1,0 +1,36 @@
+// Subclass inheriting from Patient
+public class Inpatient extends Patient {
+    private int wardNumber;
+    private String bedNumber;
+
+    // Constructor using super() to initialize inherited fields
+    public Inpatient(String patientId, String firstName, String lastName, int age, String gender, String medicalCondition, int wardNumber, String bedNumber) {
+        super(patientId, firstName, lastName, age, gender, medicalCondition, PatientCategory.INPATIENT);
+        this.wardNumber = wardNumber;
+        this.bedNumber = bedNumber;
+    }
+
+    public int getWardNumber() {
+        return wardNumber;
+    }
+
+    public void setWardNumber(int wardNumber) {
+        this.wardNumber = wardNumber;
+    }
+
+    public String getBedNumber() {
+        return bedNumber;
+    }
+
+    public void setBedNumber(String bedNumber) {
+        this.bedNumber = bedNumber;
+    }
+
+    // Overriding displayDetails method to include ward and bed
+    @Override
+    public void displayDetails() {
+        super.displayDetails();
+        System.out.println("Ward Number: " + wardNumber);
+        System.out.println("Bed Number: " + bedNumber);
+    }
+}
