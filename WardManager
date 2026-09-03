@@ -1,0 +1,184 @@
+import java.util.ArrayList;
+
+public class WardManager {
+    private ArrayList<Patient> patientList;
+    private String[][] bedLayout; // 4x5 array representing 20 beds
+
+    public WardManager() {
+        patientList = new ArrayList<>();
+        bedLayout = new String[4][5];
+        initializeBeds();
+    }
+
+    // Setup initial bed IDs: B01 to B20
+    private void initializeBeds() {
+        int count = 1;
+        for (int i = 0; i < 4; i++) {
+            for (int j = 0; j < 5; j++) {
+                if (count < 10) {
+                    bedLayout[i][j] = "B0" + count;
+                } else {
+                    bedLayout[i][j] = "B" + count;
+                }
+                count++;
+            }
+        }
+    }
+
+    // Patient Registration
+    public boolean registerPatient(Patient patient) {
+        if (findPatientById(patient.getPatientId()) != null) {
+            return false; // Duplicate ID found
+        }
+        patientList.add(patient);
+        return true;
+    }
+
+    public Patient findPatientById(String patientId) {
+        for (Patient p : patientList) {
+            if (p.getPatientId().equalsIgnoreCase(patientId)) {
+                return p;
+            }
+        }
+        return null;
+    }
+
+    public boolean updatePatient(String id, String newCondition, int newAge) {
+        Patient p = findPatientById(id);
+        if (p != null) {
+            p.setMedicalCondition(newCondition);
+            p.setAge(newAge);
+            return true;
+        }
+        return false;
+    }
+
+    public boolean deletePatient(String patientId) {
+        Patient p = findPatientById(patientId);
+        if (p != null) {
+            // If deleting an inpatient who occupies a bed, release bed first
+            if (p instanceof Inpatient) {
+                Inpatient inp = (Inpatient) p;
+                if (inp.getBedNumber() != null && !inp.getBedNumber().isEmpty()) {
+                    releaseBed(inp.getBedNumber());
+                }
+            }
+            patientList.remove(p);
+            return true;
+        }
+        return false;
+    }
+
+    // Bed Allocation Logic
+    public boolean allocateBed(String patientId, String bedNumber) {
+        Patient p = findPatientById(patientId);
+        if (p == null || !(p instanceof Inpatient)) {
+            return false; // Only inpatients can be allocated beds
+        }
+
+        Inpatient inpatient = (Inpatient) p;
+
+        // Check if all beds are occupied
+        if (getOccupiedBedCount() >= 20) {
+            return false;
+        }
+
+        // Search bed in 2D array
+        for (int i = 0; i < 4; i++) {
+            for (int j = 0; j < 5; j++) {
+                if (bedLayout[i][j].equalsIgnoreCase(bedNumber)) {
+                    // Mark occupied with [X] pattern or patient ID tracking
+                    bedLayout[i][j] = "[" + bedNumber + "]";
+                    inpatient.setBedNumber(bedNumber);
+                    return true;
+                }
+            }
+        }
+        return false; // Bed occupied or invalid
+    }
+
+    public boolean releaseBed(String bedNumber) {
+        String cleanBedNum = bedNumber.replace("[", "").replace("]", "");
+        for (int i = 0; i < 4; i++) {
+            for (int j = 0; j < 5; j++) {
+                if (bedLayout[i][j].contains(cleanBedNum)) {
+                    bedLayout[i][j] = cleanBedNum; // Reset back to available string name
+
+                    // Clear bed number from corresponding Inpatient
+                    for (Patient p : patientList) {
+                        if (p instanceof Inpatient) {
+                            Inpatient inp = (Inpatient) p;
+                            if (cleanBedNum.equalsIgnoreCase(inp.getBedNumber())) {
+                                inp.setBedNumber("None");
+                            }
+                        }
+                    }
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public void displayWardLayout() {
+        System.out.println("\n--- Ward Layout (4x5) ---");
+        for (int i = 0; i < 4; i++) {
+            for (int j = 0; j < 5; j++) {
+                System.out.print(bedLayout[i][j] + "\t");
+            }
+            System.out.println();
+        }
+    }
+
+    public int getOccupiedBedCount() {
+        int count = 0;
+        for (int i = 0; i < 4; i++) {
+            for (int j = 0; j < 5; j++) {
+                if (bedLayout[i][j].startsWith("[")) {
+                    count++;
+                }
+            }
+        }
+        return count;
+    }
+
+    public int getAvailableBedCount() {
+        return 20 - getOccupiedBedCount();
+    }
+
+    public double getOccupancyPercentage() {
+        return (getOccupiedBedCount() / 20.0) * 100.0;
+    }
+
+    // Sorting by Surname using Bubble Sort
+    public void sortBySurname() {
+        int n = patientList.size();
+        for (int i = 0; i < n - 1; i++) {
+            for (int j = 0; j < n - i - 1; j++) {
+                if (patientList.get(j).getLastName().compareToIgnoreCase(patientList.get(j + 1).getLastName()) > 0) {
+                    Patient temp = patientList.get(j);
+                    patientList.set(j, patientList.get(j + 1));
+                    patientList.set(j + 1, temp);
+                }
+            }
+        }
+    }
+
+    // Sorting by ID using Bubble Sort
+    public void sortById() {
+        int n = patientList.size();
+        for (int i = 0; i < n - 1; i++) {
+            for (int j = 0; j < n - i - 1; j++) {
+                if (patientList.get(j).getPatientId().compareToIgnoreCase(patientList.get(j + 1).getPatientId()) > 0) {
+                    Patient temp = patientList.get(j);
+                    patientList.set(j, patientList.get(j + 1));
+                    patientList.set(j + 1, temp);
+                }
+            }
+        }
+    }
+
+    public ArrayList<Patient> getPatientList() {
+        return patientList;
+    }
+}
