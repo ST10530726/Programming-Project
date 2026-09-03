@@ -1,0 +1,167 @@
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        WardManager manager = new WardManager();
+        Scanner input = new Scanner(System.in);
+        boolean exit = false;
+
+        while (!exit) {
+            System.out.println("\n===== MEDICARE HOSPITAL ADMISSION SYSTEM =====");
+            System.out.println("1. Register New Patient");
+            System.out.println("2. Search Patient by ID");
+            System.out.println("3. Update Patient Details");
+            System.out.println("4. Delete Patient");
+            System.out.println("5. Allocate Bed to Inpatient");
+            System.out.println("6. Release Bed");
+            System.out.println("7. Display Ward Layout");
+            System.out.println("8. Generate Ward Report");
+            System.out.println("9. Exit");
+            System.out.print("Select an option: ");
+
+            int choice = 0;
+            try {
+                choice = Integer.parseInt(input.nextLine());
+            } catch (Exception e) {
+                System.out.println("Invalid input. Enter a number.");
+                continue;
+            }
+
+            switch (choice) {
+                case 1:
+                    System.out.print("Enter Patient ID: ");
+                    String id = input.nextLine();
+                    System.out.print("Enter First Name: ");
+                    String fname = input.nextLine();
+                    System.out.print("Enter Last Name: ");
+                    String lname = input.nextLine();
+                    System.out.print("Enter Age: ");
+                    int age = Integer.parseInt(input.nextLine());
+                    System.out.print("Enter Gender: ");
+                    String gender = input.nextLine();
+                    System.out.print("Enter Medical Condition: ");
+                    String condition = input.nextLine();
+
+                    System.out.println("Select Category: 1. Inpatient  2. Outpatient  3. Emergency");
+                    int catChoice = Integer.parseInt(input.nextLine());
+
+                    if (catChoice == 1) {
+                        System.out.print("Enter Ward Number: ");
+                        int ward = Integer.parseInt(input.nextLine());
+                        Inpatient inp = new Inpatient(id, fname, lname, age, gender, condition, ward, "Unassigned");
+                        if (manager.registerPatient(inp)) {
+                            System.out.println("Inpatient registered successfully.");
+                        } else {
+                            System.out.println("Error: Patient ID already exists.");
+                        }
+                    } else if (catChoice == 2) {
+                        Patient p = new Patient(id, fname, lname, age, gender, condition, PatientCategory.OUTPATIENT);
+                        if (manager.registerPatient(p)) {
+                            System.out.println("Outpatient registered successfully.");
+                        } else {
+                            System.out.println("Error: Patient ID already exists.");
+                        }
+                    } else if (catChoice == 3) {
+                        Patient p = new Patient(id, fname, lname, age, gender, condition, PatientCategory.EMERGENCY);
+                        if (manager.registerPatient(p)) {
+                            System.out.println("Emergency patient registered successfully.");
+                        } else {
+                            System.out.println("Error: Patient ID already exists.");
+                        }
+                    }
+                    break;
+
+                case 2:
+                    System.out.print("Enter Patient ID to search: ");
+                    String searchId = input.nextLine();
+                    Patient p = manager.findPatientById(searchId);
+                    if (p != null) {
+                        System.out.println("\n--- Patient Found ---");
+                        p.displayDetails();
+                    } else {
+                        System.out.println("Patient not found.");
+                    }
+                    break;
+
+                case 3:
+                    System.out.print("Enter Patient ID to update: ");
+                    String upId = input.nextLine();
+                    System.out.print("Enter New Medical Condition: ");
+                    String newCond = input.nextLine();
+                    System.out.print("Enter New Age: ");
+                    int newAge = Integer.parseInt(input.nextLine());
+
+                    if (manager.updatePatient(upId, newCond, newAge)) {
+                        System.out.println("Patient details updated.");
+                    } else {
+                        System.out.println("Patient not found.");
+                    }
+                    break;
+
+                case 4:
+                    System.out.print("Enter Patient ID to delete: ");
+                    String delId = input.nextLine();
+                    if (manager.deletePatient(delId)) {
+                        System.out.println("Patient removed.");
+                    } else {
+                        System.out.println("Patient record not found.");
+                    }
+                    break;
+
+                case 5:
+                    System.out.print("Enter Inpatient ID: ");
+                    String allocId = input.nextLine();
+                    System.out.print("Enter Bed Number (e.g. B01): ");
+                    String bedNum = input.nextLine();
+
+                    if (manager.allocateBed(allocId, bedNum)) {
+                        System.out.println("Bed allocated successfully.");
+                    } else {
+                        System.out.println("Allocation failed. Check patient ID or bed status.");
+                    }
+                    break;
+
+                case 6:
+                    System.out.print("Enter Bed Number to release: ");
+                    String relBed = input.nextLine();
+                    if (manager.releaseBed(relBed)) {
+                        System.out.println("Bed released.");
+                    } else {
+                        System.out.println("Invalid bed number or bed already empty.");
+                    }
+                    break;
+
+                case 7:
+                    manager.displayWardLayout();
+                    break;
+
+                case 8:
+                    System.out.println("\n===== WARD REPORT =====");
+                    System.out.println("Total Registered Patients: " + manager.getPatientList().size());
+                    System.out.println("Occupied Beds: " + manager.getOccupiedBedCount());
+                    System.out.println("Available Beds: " + manager.getAvailableBedCount());
+                    System.out.println("Ward Occupancy Rate: " + manager.getOccupancyPercentage() + "%");
+
+                    System.out.println("\nRegistered Patient List:");
+                    manager.sortBySurname(); // Default sort by surname for report
+                    for (Patient pat : manager.getPatientList()) {
+                        System.out.println("-------------------------");
+                        pat.displayDetails();
+                    }
+                    break;
+
+                case 9:
+                    exit = true;
+                    System.out.println("Exiting System.");
+                    break;
+
+                default:
+                    System.out.println("Invalid option.");
+            }
+        }
+        input.close();
+    }
+}
+
+
+
